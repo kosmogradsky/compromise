@@ -8,6 +8,7 @@
 <div>selection start: {{textStatePreview.selection.start}}</div>
 <div>selection end: {{textStatePreview.selection.end}}</div>
 <div>isEnteringText: {{textStatePreview.isEnteringText}}</div>
+<div>isSelectingText: {{textStatePreview.isSelectingText}}</div>
 <form action="" (submit)="handleCommand($event)">
   <input type="text" [value]="commandString" (input)="commandString = $event.target.value;" />
 </form>

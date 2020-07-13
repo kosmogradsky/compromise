@@ -89,16 +89,42 @@ export class AppComponent {
         for (const commandChar of commandChars) {
           switch (commandChar) {
             case 'a': {
-              const position = Math.max(newTextState.selection.start - 1, 0);
-              newTextState.selection = new Selection(position, 0);
+              const newSelectionStart = newTextState.selection.start - 1;
+              if (newSelectionStart >= 0) {
+                newTextState.selection = new Selection(
+                  newSelectionStart,
+                  newTextState.selection.length + 1
+                );
+              }
               break;
             }
             case 's': {
-              const position = Math.min(
-                newTextState.selection.end + 1,
-                newTextState.text.length - 1
+              const newSelectionStart = newTextState.selection.start + 1;
+              if (newSelectionStart <= newTextState.selection.end) {
+                newTextState.selection = new Selection(
+                  newSelectionStart,
+                  newTextState.selection.length - 1
+                );
+              }
+              break;
+            }
+            case 'd': {
+              if (newTextState.selection.length - 1 >= 0) {
+                newTextState.selection = new Selection(
+                  newTextState.selection.start,
+                  newTextState.selection.length - 1
+                );
+              }
+              break;
+            }
+            case 'f': {
+              const newSelection = new Selection(
+                newTextState.selection.start,
+                newTextState.selection.length + 1
               );
-              newTextState.selection = new Selection(position, 0);
+              if (newSelection.end <= newTextState.text.length) {
+                newTextState.selection = newSelection;
+              }
               break;
             }
             default:
@@ -106,6 +132,7 @@ export class AppComponent {
           }
         }
 
+        newTextState.isSelectingText = false;
         return newTextState;
       } else {
         const commandChars = commandString.split('');
