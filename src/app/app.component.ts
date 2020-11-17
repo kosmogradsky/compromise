@@ -1,18 +1,17 @@
 import { Component } from '@angular/core';
+import {
+  shrinkLeftwise,
+  shrinkRightwise,
+  TextSelection,
+  widenLeftwise,
+  widenRightwise,
+} from './editor-state.service';
 
 interface TextState {
-  selection: Selection;
+  selection: TextSelection;
   isSelectingText: boolean;
   isEnteringText: boolean;
   text: string;
-}
-
-class Selection {
-  constructor(public start: number, public length: number) {}
-
-  get end() {
-    return this.start + this.length;
-  }
 }
 
 @Component({
@@ -22,7 +21,7 @@ class Selection {
 })
 export class AppComponent {
   textState: TextState = {
-    selection: new Selection(0, 0),
+    selection: new TextSelection(0, 0),
     text: 'the text',
     isEnteringText: false,
     isSelectingText: false,
@@ -79,7 +78,7 @@ export class AppComponent {
             textState.text.slice(textState.selection.end),
           isEnteringText: false,
           isSelectingText: textState.isSelectingText,
-          selection: new Selection(position, 0),
+          selection: new TextSelection(position, 0),
         };
       } else if (textState.isSelectingText) {
         const commandChars = commandString.split('');
@@ -89,42 +88,28 @@ export class AppComponent {
         for (const commandChar of commandChars) {
           switch (commandChar) {
             case 'a': {
-              const newSelectionStart = newTextState.selection.start - 1;
-              if (newSelectionStart >= 0) {
-                newTextState.selection = new Selection(
-                  newSelectionStart,
-                  newTextState.selection.length + 1
-                );
-              }
+              newTextState.selection = widenLeftwise.updateSelection(
+                newTextState.selection
+              );
               break;
             }
             case 's': {
-              const newSelectionStart = newTextState.selection.start + 1;
-              if (newSelectionStart <= newTextState.selection.end) {
-                newTextState.selection = new Selection(
-                  newSelectionStart,
-                  newTextState.selection.length - 1
-                );
-              }
+              newTextState.selection = shrinkLeftwise.updateSelection(
+                newTextState.selection
+              );
               break;
             }
             case 'd': {
-              if (newTextState.selection.length - 1 >= 0) {
-                newTextState.selection = new Selection(
-                  newTextState.selection.start,
-                  newTextState.selection.length - 1
-                );
-              }
+              newTextState.selection = shrinkRightwise.updateSelection(
+                newTextState.selection
+              );
               break;
             }
             case 'f': {
-              const newSelection = new Selection(
-                newTextState.selection.start,
-                newTextState.selection.length + 1
+              newTextState.selection = widenRightwise.updateSelection(
+                newTextState.selection,
+                newTextState.text.length
               );
-              if (newSelection.end <= newTextState.text.length) {
-                newTextState.selection = newSelection;
-              }
               break;
             }
             default:
@@ -153,7 +138,7 @@ export class AppComponent {
           switch (commandChar) {
             case 'a': {
               const position = Math.max(newTextState.selection.start - 1, 0);
-              newTextState.selection = new Selection(position, 0);
+              newTextState.selection = new TextSelection(position, 0);
               break;
             }
             case 's': {
@@ -161,7 +146,7 @@ export class AppComponent {
                 newTextState.selection.end + 1,
                 newTextState.text.length - 1
               );
-              newTextState.selection = new Selection(position, 0);
+              newTextState.selection = new TextSelection(position, 0);
               break;
             }
             case 'z': {
@@ -174,7 +159,7 @@ export class AppComponent {
                 newTextState.text =
                   newTextState.text.slice(0, position) +
                   newTextState.text.slice(newTextState.selection.start);
-                newTextState.selection = new Selection(position, 0);
+                newTextState.selection = new TextSelection(position, 0);
                 break;
               }
             }
