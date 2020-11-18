@@ -1,11 +1,5 @@
 import { Component } from '@angular/core';
-import {
-  shrinkLeftwise,
-  shrinkRightwise,
-  TextSelection,
-  widenLeftwise,
-  widenRightwise,
-} from './editor-state.service';
+import { EditorService, TextSelection } from './editor.service';
 
 interface TextState {
   selection: TextSelection;
@@ -61,139 +55,36 @@ export class AppComponent {
     ];
   }
 
-  get applyCommands(): (textState: TextState) => TextState {
+  applyCommands(textState: TextState): TextState {
     const commandString = this.commandString;
 
-    return (textState) => {
-      if (textState.isEnteringText) {
-        const position =
-          textState.text.length === 0
-            ? commandString.length
-            : textState.selection.start + commandString.length;
+    if (textState.isEnteringText) {
+      const position =
+        textState.text.length === 0
+          ? commandString.length
+          : textState.selection.start + commandString.length;
 
-        return {
-          text:
-            textState.text.slice(0, textState.selection.start) +
-            commandString +
-            textState.text.slice(textState.selection.end),
-          isEnteringText: false,
-          isSelectingText: textState.isSelectingText,
-          selection: new TextSelection(position, 0),
-        };
-      } else if (textState.isSelectingText) {
-        const commandChars = commandString.split('');
+      return {
+        text:
+          textState.text.slice(0, textState.selection.start) +
+          commandString +
+          textState.text.slice(textState.selection.end),
+        isEnteringText: false,
+        isSelectingText: textState.isSelectingText,
+        selection: new TextSelection(position, 0),
+      };
+    } else {
+      const actions = this.editorService.parseCommands(commandString);
+      const state = actions.reduce(
+        (prevState, action) => action.updateState(prevState),
+        textState
+      );
 
-        let newTextState = { ...textState };
-
-        for (const commandChar of commandChars) {
-          switch (commandChar) {
-            case 'a': {
-              newTextState.selection = widenLeftwise.updateSelection(
-                newTextState.selection
-              );
-              break;
-            }
-            case 's': {
-              newTextState.selection = shrinkLeftwise.updateSelection(
-                newTextState.selection
-              );
-              break;
-            }
-            case 'd': {
-              newTextState.selection = shrinkRightwise.updateSelection(
-                newTextState.selection
-              );
-              break;
-            }
-            case 'f': {
-              newTextState.selection = widenRightwise.updateSelection(
-                newTextState.selection,
-                newTextState.text.length
-              );
-              break;
-            }
-            default:
-              break;
-          }
-        }
-
-        newTextState.isSelectingText = false;
-        return newTextState;
-      } else {
-        const commandChars = commandString.split('');
-
-        let newTextState = { ...textState };
-
-        for (const commandChar of commandChars) {
-          if (commandChar === 't') {
-            newTextState.isEnteringText = true;
-            break;
-          }
-
-          if (commandChar === 'e') {
-            newTextState.isSelectingText = true;
-            break;
-          }
-
-          switch (commandChar) {
-            case 'a': {
-              const position = Math.max(newTextState.selection.start - 1, 0);
-              newTextState.selection = new TextSelection(position, 0);
-              break;
-            }
-            case 's': {
-              const position = Math.min(
-                newTextState.selection.end + 1,
-                newTextState.text.length - 1
-              );
-              newTextState.selection = new TextSelection(position, 0);
-              break;
-            }
-            case 'z': {
-              if (newTextState.text.length === 1) {
-                newTextState.text = '';
-                break;
-              } else {
-                const position = Math.max(newTextState.selection.start - 1, 0);
-
-                newTextState.text =
-                  newTextState.text.slice(0, position) +
-                  newTextState.text.slice(newTextState.selection.start);
-                newTextState.selection = new TextSelection(position, 0);
-                break;
-              }
-            }
-            case 'x': {
-              if (
-                newTextState.selection.start ===
-                newTextState.text.length - 1
-              ) {
-                newTextState.text = newTextState.text.slice(
-                  0,
-                  newTextState.selection.start
-                );
-                newTextState.selection.start -= 1;
-                break;
-              } else {
-                const position = Math.min(
-                  newTextState.selection.start + 1,
-                  newTextState.text.length - 1
-                );
-                newTextState.text =
-                  newTextState.text.slice(0, newTextState.selection.start) +
-                  newTextState.text.slice(position);
-                break;
-              }
-            }
-            default:
-              break;
-          }
-        }
-
-        return newTextState;
-      }
-    };
+      return state;
+    }
   }
+
+  constructor(private editorService: EditorService) {}
 
   handleCommand(event: any) {
     event.preventDefault();

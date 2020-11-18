@@ -1,13 +1,13 @@
 import { TestBed } from '@angular/core/testing';
 
-import { EditorStateService } from './editor-state.service';
+import { EditorService } from './editor.service';
 
-describe('EditorStateService', () => {
-  let service: EditorStateService;
+describe('EditorService', () => {
+  let service: EditorService;
 
   beforeEach(() => {
     TestBed.configureTestingModule({});
-    service = TestBed.inject(EditorStateService);
+    service = TestBed.inject(EditorService);
   });
 
   it('should be created', () => {
