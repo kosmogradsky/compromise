@@ -42,13 +42,13 @@ export class AppComponent {
       {
         text: this.textStatePreview.text.slice(
           this.textStatePreview.selection.start,
-          this.textStatePreview.selection.end + 1
+          this.textStatePreview.selection.end
         ),
         highlight: true,
       },
       {
         text: this.textStatePreview.text.slice(
-          this.textStatePreview.selection.end + 1
+          this.textStatePreview.selection.end
         ),
         highlight: false,
       },

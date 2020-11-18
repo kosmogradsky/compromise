@@ -19,7 +19,7 @@ export interface EditorAction {
   updateState(prevState: EditorState): EditorState;
 }
 
-export const widenRightwise = {
+const widenRightwise = {
   updateSelection(
     prevSelection: TextSelection,
     textLength: number
@@ -29,7 +29,7 @@ export const widenRightwise = {
       prevSelection.length + 1
     );
 
-    if (newSelection.end <= textLength) {
+    if (newSelection.end < textLength) {
       return newSelection;
     }
 
@@ -46,7 +46,7 @@ export const widenRightwise = {
   },
 };
 
-export const shrinkRightwise = {
+const shrinkRightwise = {
   updateSelection(prevSelection: TextSelection): TextSelection {
     if (prevSelection.length - 1 >= 0) {
       return new TextSelection(prevSelection.start, prevSelection.length - 1);
@@ -62,7 +62,7 @@ export const shrinkRightwise = {
   },
 };
 
-export const goLeft = {
+const goLeft = {
   goLeft(prevSelection: TextSelection): TextSelection {
     const position = Math.max(prevSelection.start - 1, 0);
 
@@ -87,7 +87,7 @@ export const goLeft = {
   },
 };
 
-export const goRight = {
+const goRight = {
   goRight(prevSelection: TextSelection, textLength: number): TextSelection {
     const position = Math.min(prevSelection.end + 1, textLength - 1);
 
@@ -112,8 +112,20 @@ export const goRight = {
   },
 };
 
-export const deleteLeftwise = {
+const deleteSelection = {
   updateState(prevState: EditorState): EditorState {
+    return {
+      ...prevState,
+      text:
+        prevState.text.slice(0, prevState.selection.start) +
+        prevState.text.slice(prevState.selection.end),
+      selection: new TextSelection(prevState.selection.start, 0),
+    };
+  },
+};
+
+const deleteLeftwise = {
+  deleteLeftwise(prevState: EditorState): EditorState {
     if (prevState.text.length === 1) {
       return {
         ...prevState,
@@ -131,10 +143,17 @@ export const deleteLeftwise = {
       };
     }
   },
+  updateState(prevState: EditorState): EditorState {
+    if (prevState.selection.length > 0) {
+      return deleteSelection.updateState(prevState);
+    }
+
+    return this.deleteLeftwise(prevState);
+  },
 };
 
-export const deleteRightwise = {
-  updateState(prevState: EditorState): EditorState {
+const deleteRightwise = {
+  deleteRightwise(prevState: EditorState): EditorState {
     if (prevState.selection.start === prevState.text.length - 1) {
       return {
         ...prevState,
@@ -154,9 +173,16 @@ export const deleteRightwise = {
       };
     }
   },
+  updateState(prevState: EditorState): EditorState {
+    if (prevState.selection.length > 0) {
+      return deleteSelection.updateState(prevState);
+    }
+
+    return this.deleteRightwise(prevState);
+  },
 };
 
-export const switchSelectionMode = {
+const switchSelectionMode = {
   updateState(prevState: EditorState): EditorState {
     return {
       ...prevState,
@@ -165,7 +191,7 @@ export const switchSelectionMode = {
   },
 };
 
-export const switchEnteringMode = {
+const switchEnteringMode = {
   updateState(prevState: EditorState): EditorState {
     return {
       ...prevState,
