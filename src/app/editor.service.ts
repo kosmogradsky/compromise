@@ -89,7 +89,7 @@ const goLeft = {
 
 const goRight = {
   goRight(prevSelection: TextSelection, textLength: number): TextSelection {
-    const position = Math.min(prevSelection.end + 1, textLength - 1);
+    const position = Math.min(prevSelection.end + 1, textLength);
 
     return new TextSelection(position, 0);
   },

@@ -1,4 +1,4 @@
-import { Component } from '@angular/core';
+import { Component, ElementRef, ViewChild } from '@angular/core';
 import { EditorService, TextSelection } from './editor.service';
 
 interface TextState {
@@ -14,6 +14,8 @@ interface TextState {
   styleUrls: ['./app.component.css'],
 })
 export class AppComponent {
+  @ViewChild('textLine') textLine: ElementRef<HTMLElement>;
+
   textState: TextState = {
     selection: new TextSelection(0, 0),
     text: 'the text',
@@ -21,36 +23,17 @@ export class AppComponent {
     isSelectingText: false,
   };
   commandString = '';
+  cursorLeftOffset = 0;
+  textStatePreview: TextState = this.textState;
 
-  get textStatePreview(): TextState {
-    return this.applyCommands(this.textState);
-  }
-
-  get textPieces(): { text: string; highlight: boolean }[] {
+  get textPieces(): { text: string }[] {
     if (this.textStatePreview.text.length === 0) {
       return [];
     }
 
     return [
       {
-        text: this.textStatePreview.text.slice(
-          0,
-          this.textStatePreview.selection.start
-        ),
-        highlight: false,
-      },
-      {
-        text: this.textStatePreview.text.slice(
-          this.textStatePreview.selection.start,
-          this.textStatePreview.selection.end
-        ),
-        highlight: true,
-      },
-      {
-        text: this.textStatePreview.text.slice(
-          this.textStatePreview.selection.end
-        ),
-        highlight: false,
+        text: this.textStatePreview.text,
       },
     ];
   }
@@ -89,6 +72,39 @@ export class AppComponent {
   handleCommand(event: any) {
     event.preventDefault();
     this.textState = this.applyCommands(this.textState);
+    this.textStatePreview = this.textState;
     this.commandString = '';
+
+    const textLineEl = this.textLine.nativeElement;
+    const theLineSpanEl = textLineEl.children[1].childNodes[0];
+    const range = document.createRange();
+    range.setStart(theLineSpanEl, 2);
+    range.setEnd(theLineSpanEl, 3);
+
+    const rects = range.getClientRects();
+    this.cursorLeftOffset =
+      rects[0].left - textLineEl.getBoundingClientRect().left - 0.5;
+  }
+
+  handleCommandInput(commandString: string) {
+    this.commandString = commandString;
+    this.textStatePreview = this.applyCommands(this.textState);
+
+    const textLineEl = this.textLine.nativeElement;
+    const theLineSpanEl = textLineEl.children[1].childNodes[0];
+    const range = document.createRange();
+    range.setStart(theLineSpanEl, this.textStatePreview.selection.start);
+    range.setEnd(
+      theLineSpanEl,
+      this.textStatePreview.selection.end === this.textStatePreview.text.length
+        ? this.textStatePreview.selection.start
+        : this.textStatePreview.selection.start + 1
+    );
+
+    const rects = range.getClientRects();
+    this.cursorLeftOffset =
+      this.textStatePreview.selection.end === this.textStatePreview.text.length
+        ? rects[0].right - 8.5
+        : rects[0].left - 8.5;
   }
 }

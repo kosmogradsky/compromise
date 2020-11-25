@@ -1,8 +1,7 @@
-<div style="white-space: pre;">
+<div class="text-line" #textLine>
+  <div class="text-cursor" [style.left.px]="cursorLeftOffset"></div>
   <span
     *ngFor="let piece of textPieces"
-    [style.color]="piece.highlight ? 'white' : 'black'"
-    [style.background-color]="piece.highlight ? 'black' : 'transparent'"
   >{{piece.text}}</span>
 </div>
 <div>selection start: {{textStatePreview.selection.start}}</div>
@@ -10,5 +9,5 @@
 <div>isEnteringText: {{textStatePreview.isEnteringText}}</div>
 <div>isSelectingText: {{textStatePreview.isSelectingText}}</div>
 <form action="" (submit)="handleCommand($event)">
-  <input type="text" [value]="commandString" (input)="commandString = $event.target.value;" />
+  <input type="text" [value]="commandString" (input)="handleCommandInput($event.target.value)" />
 </form>
